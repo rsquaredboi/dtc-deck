@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>DTC 3.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+@font-face {
+  font-family: 'PP Editorial New';
+  src: url('PPEditorialNew-Ultralight.otf') format('opentype');
+  font-weight: 200;
+  font-display: swap;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+:root {
+  --accent: #C9B87A;
+  --highlight: #C9B87A;
+  --card: #0a2614;
+  --text: #ffffff;
+  --bg: linear-gradient(170deg, #0c2e18 0%, #061a0e 40%, #030e06 100%);
+  --glow: radial-gradient(ellipse 80% 60% at 50% 20%, rgba(25,70,40,0.15) 0%, transparent 60%);
+}
+html,body{height:100%;overflow:hidden;background:#030e06;color:#fff;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.deck{position:relative;width:100vw;height:100vh;overflow:hidden;background:var(--bg);user-select:none}
+.glow{position:absolute;inset:0;pointer-events:none;background:var(--glow)}
+.grain{position:absolute;inset:0;pointer-events:none;opacity:0.04;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:128px 128px}
+.slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:3rem 3rem 5rem;opacity:0;transition:opacity 0.4s ease;pointer-events:none;z-index:5}
+.slide.active{opacity:1;pointer-events:auto}
+.slide-inner{text-align:center;max-width:960px;width:100%;display:flex;flex-direction:column;align-items:center;gap:1.5rem}
+
+/* Typography */
+h1,h2,.editorial{font-family:'PP Editorial New','Playfair Display',Georgia,serif;font-weight:200}
+.huge{font-size:clamp(2.8rem,7vw,6.5rem);line-height:1.05;letter-spacing:-0.02em}
+.big{font-size:clamp(2rem,4.5vw,4rem);line-height:1.1;letter-spacing:-0.01em}
+.body{font-size:clamp(1rem,1.8vw,1.35rem);line-height:1.7;font-weight:300;color:rgba(255,255,255,0.5)}
+.gold{color:var(--accent)}
+.dim{color:rgba(255,255,255,0.2)}
+.white{color:#fff;font-weight:400}
+.ital{font-style:italic;color:rgba(255,255,255,0.25)}
+.label{font-size:0.7rem;letter-spacing:0.35em;text-transform:uppercase;color:var(--accent);opacity:0.6;font-weight:600;font-family:'Inter',sans-serif}
+.divider{width:4rem;height:1px;background:rgba(201,184,122,0.3)}
+.editorial-accent{font-family:'PP Editorial New','Playfair Display',Georgia,serif;font-size:clamp(1.5rem,3vw,2.5rem);color:var(--accent);font-weight:200;font-style:italic}
+
+/* Cards */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,0.06);width:100%;max-width:800px;margin-top:2rem}
+@media(max-width:768px){.grid3{grid-template-columns:1fr !important}}
+.card{text-align:left;padding:1.5rem;background:var(--card)}
+.card-gold{text-align:left;padding:1.5rem;background:var(--card);border-top:2px solid var(--accent)}
+.card-title{font-family:'PP Editorial New','Playfair Display';font-size:1.2rem;color:#fff;margin-top:0.4rem;font-weight:200}
+.card-gold-title{font-family:'PP Editorial New','Playfair Display';font-size:1.4rem;color:var(--accent);font-weight:200}
+.card-body{font-size:0.85rem;line-height:1.6;font-weight:300;color:rgba(255,255,255,0.4);margin-top:0.5rem}
+.card-label{font-size:0.65rem;letter-spacing:0.3em;text-transform:uppercase;font-weight:600;font-family:'Inter',sans-serif}
+
+/* Moat list */
+.moat-list{margin-top:2rem;text-align:left;max-width:600px;display:flex;flex-direction:column;gap:1rem}
+.moat-item{display:flex;align-items:flex-start;gap:0.75rem}
+.moat-dot{color:var(--accent);margin-top:0.4rem;font-size:0.4rem;opacity:0.6}
+.moat-text{font-size:1rem;line-height:1.6;font-weight:300;color:rgba(255,255,255,0.5)}
+
+/* Nav */
+.progress{position:absolute;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.05);z-index:30}
+.progress-bar{height:100%;background:var(--accent);transition:width 0.35s cubic-bezier(0.25,0.1,0.25,1)}
+.topbar{position:absolute;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;padding-top:1.5rem}
+.topbar-label{color:rgba(255,255,255,0.15);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.2em}
+.topbar-counter{color:rgba(255,255,255,0.15);font-size:0.75rem;font-family:monospace}
+.click-zone{position:absolute;top:0;bottom:0;width:20%;z-index:10;opacity:0;border:none;background:none}
+.click-zone-left{left:0;cursor:w-resize}
+.click-zone-right{right:0;cursor:e-resize}
+.bottom-nav{position:absolute;bottom:1.5rem;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:center;gap:0.75rem}
+.nav-btn{width:2.5rem;height:2.5rem;border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.25);background:none;cursor:pointer;transition:all 0.15s ease;font-size:1rem}
+.nav-btn:hover{color:rgba(255,255,255,0.5);border-color:rgba(255,255,255,0.15)}
+.nav-btn:disabled{opacity:0.15;cursor:not-allowed}
+.talk{margin-top:3rem;color:rgba(255,255,255,0.15);font-size:0.85rem}
+.tbl{width:100%;max-width:750px;margin-top:1.5rem;border-collapse:collapse;font-size:0.8rem}
+.tbl th{text-align:left;padding:0.6rem 1rem;color:var(--accent);font-weight:600;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;border-bottom:1px solid rgba(201,184,122,0.2)}
+.tbl td{padding:0.6rem 1rem;color:rgba(255,255,255,0.5);border-bottom:1px solid rgba(255,255,255,0.04);font-weight:300}
+.tbl td:first-child{color:rgba(255,255,255,0.3);font-weight:400;font-size:0.75rem}
+.tbl tr:last-child td{border-bottom:none}
+.stat-row{display:flex;gap:1px;width:100%;max-width:800px;margin-top:1.5rem;background:rgba(255,255,255,0.06)}
+.stat-box{flex:1;padding:1.2rem 1rem;background:var(--card);text-align:center}
+.stat-num{font-family:'PP Editorial New','Playfair Display';font-size:clamp(1.5rem,3vw,2.5rem);color:var(--accent);font-weight:200}
+.stat-label{font-size:0.7rem;color:rgba(255,255,255,0.35);margin-top:0.3rem;font-weight:400}
+.timeline{display:flex;flex-direction:column;gap:0;width:100%;max-width:700px;margin-top:1.5rem}
+.tl-item{display:flex;gap:1rem;padding:0.8rem 0;border-left:2px solid rgba(201,184,122,0.15);padding-left:1.5rem;position:relative}
+.tl-item::before{content:'';position:absolute;left:-5px;top:1rem;width:8px;height:8px;border-radius:50%;background:var(--accent);opacity:0.4}
+.tl-item:first-child{border-color:var(--accent)}
+.tl-item:first-child::before{opacity:1}
+.tl-year{font-family:'PP Editorial New';font-size:1rem;color:var(--accent);min-width:60px;font-weight:200}
+.tl-desc{font-size:0.85rem;color:rgba(255,255,255,0.45);font-weight:300;line-height:1.5}
+.risk-item{display:flex;gap:1rem;padding:0.6rem 0}
+.risk-label{font-size:0.75rem;color:var(--accent);font-weight:600;min-width:120px;text-align:right}
+.risk-text{font-size:0.85rem;color:rgba(255,255,255,0.4);font-weight:300;line-height:1.5}
+
+/* No stagger — clean slide transitions only */
+
+/* Blob morph */
+@keyframes blob-morph {
+  0%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%}
+  25%{border-radius:30% 70% 70% 30%/30% 30% 70% 70%}
+  50%{border-radius:40% 60% 60% 40%/70% 40% 60% 30%}
+  75%{border-radius:70% 30% 30% 70%/40% 70% 30% 60%}
+  100%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%}
+}
+.blob{position:absolute;width:500px;height:500px;filter:blur(80px);opacity:0.08;pointer-events:none;animation:blob-morph 12s ease-in-out infinite}
+.blob-1{background:rgba(13,148,136,0.4);top:-10%;left:30%;animation-delay:0s}
+.blob-2{background:rgba(201,184,122,0.3);bottom:-5%;right:20%;animation-delay:-6s}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+<div class="glow"></div>
+<div class="grain"></div>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<!-- PROGRESS -->
+<div class="progress"><div class="progress-bar" id="pbar"></div></div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+<div class="topbar-label" id="slabel">/dtc-3.0</div>
+<div class="topbar-counter" id="counter">01 / 15</div>
+</div>
+
+<!-- CLICK ZONES -->
+<button class="click-zone click-zone-left" id="czl"></button>
+<button class="click-zone click-zone-right" id="czr"></button>
+
+<!-- SLIDE 1: TITLE -->
+<div class="slide active" data-label="/dtc-3.0" data-section="">
+<div class="slide-inner">
+<p class="label">Care & Bloom &middot; 2026</p>
+<h1 class="huge">DTC <span class="gold">3.0</span></h1>
+<div class="divider"></div>
+<p class="body" style="max-width:480px">The Infrastructure Era of Consumer Brands</p>
+<p class="editorial-accent" style="margin-top:1rem">&ldquo;You can build Disneyland now &mdash;<br/>because the only hard part is the Disneyland part.&rdquo;</p>
+</div>
+</div>
+
+<!-- SLIDE 2: THE SHIFT -->
+<div class="slide" data-label="The Shift" data-section="The Shift">
+<div class="slide-inner">
+<p class="label">01 &mdash; The Shift</p>
+<h2 class="huge">Everything that was <span class="gold">hard</span> is now easy.</h2>
+<p class="body">Paid media. Landing pages. Customer service. Analytics. Content. Supply chain coordination.</p>
+<p class="body">All of it &mdash; automatable by <span class="white">two or three people with AI agents.</span></p>
+<p class="body ital">What used to take a team of 50 now takes a team of 3.</p>
+</div>
+</div>
+
+<!-- SLIDE 3: THE INVERSION -->
+<div class="slide" data-label="The Inversion" data-section="The Inversion">
+<div class="slide-inner">
+<p class="label">02 &mdash; The Inversion</p>
+<h2 class="huge">The only hard part<br/>is the <span class="gold">hard part.</span></h2>
+<div class="divider"></div>
+<p class="body">You can build <span class="white">Disney</span> now &mdash; brand, IP, content, digital presence &mdash; with a laptop and an API key.</p>
+<p class="body">You cannot build <span class="gold">Disneyland</span> &mdash; manufacturing relationships, physical product, supply chain trust, embodied community &mdash; without years of work.</p>
+<p class="body ital">That&rsquo;s the moat. Everything else is a commodity.</p>
+</div>
+</div>
+
+<!-- SLIDE 4: THE DEAD ZONE -->
+<div class="slide" data-label="The Dead Zone" data-section="The Dead Zone">
+<div class="slide-inner">
+<p class="label">03 &mdash; The Dead Zone</p>
+<h2 class="big">Most brands are stuck in <span class="dim">DTC 2.0</span></h2>
+<div class="grid3">
+<div class="card">
+<p class="card-label" style="color:rgba(255,255,255,0.2)">DTC 1.0</p>
+<p class="card-title">The Pioneer Era</p>
+<p class="card-body">Warby Parker. Facebook ads + Shopify = brand.</p>
+<p style="font-size:0.7rem;margin-top:0.75rem;color:rgba(255,255,255,0.15)">Moat: First-mover advantage</p>
+</div>
+<div class="card">
+<p class="card-label" style="color:rgba(255,255,255,0.3)">DTC 2.0</p>
+<p class="card-title">The Aggregator Era</p>
+<p class="card-body">Thrasio. Buy cheap. Optimize ops. Roll up.</p>
+<p style="font-size:0.7rem;margin-top:0.75rem;color:rgba(255,255,255,0.2)">Moat: Capital</p>
+</div>
+<div class="card" style="border-top:2px solid var(--accent)">
+<p class="card-label gold">DTC 3.0</p>
+<p class="card-title">The AI-Native Era</p>
+<p class="card-body">Build, buy, and fund brands with 90% less overhead.</p>
+<p style="font-size:0.7rem;margin-top:0.75rem;color:var(--accent)">Moat: Physical assets + AI operating system</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- SLIDE 5: THE PLAYBOOK -->
+<div class="slide" data-label="The Playbook" data-section="The Playbook">
+<div class="slide-inner">
+<p class="label">04 &mdash; The Playbook</p>
+<h2 class="huge">We <span class="gold">figured</span> it out.</h2>
+<div class="divider"></div>
+<p class="body">Lean team. AI-augmented everything.<br/>Eight-figure run rate. Massive free cash flow.<br/>Built from scratch in under three years.</p>
+<p class="body">A few of us have cracked the code.<br/><span class="white">What&rsquo;s missing isn&rsquo;t talent or insight.</span></p>
+<p class="editorial-accent">It&rsquo;s capital.</p>
+</div>
+</div>
+
+<!-- SLIDE 6: THE MVP -->
+<div class="slide" data-label="The Proof" data-section="The Proof">
+<div class="slide-inner">
+<p class="label">05 &mdash; The Proof</p>
+<h2 class="huge"><span class="dim">$0</span> &rarr; <span class="gold">$80M</span></h2>
+<p class="body white" style="font-size:clamp(1.2rem,2vw,1.6rem);margin-top:0.5rem">15% EBIT &middot; 3 people &middot; 3 years</p>
+<div class="divider"></div>
+<p class="body">We didn&rsquo;t build a brand. We built a <span class="white">laboratory.</span><br/>Every assumption tested. Every system automated. Every dollar tracked by AI.</p>
+<p class="body">The last three years were the learning. Now we know what works.</p>
+<p class="body ital" style="margin-top:1rem">&ldquo;Also scaled the fastest-growing supplement brand in the country.<br/>As a side hustle.&rdquo;</p>
+</div>
+</div>
+
+<!-- SLIDE 7: THE CATEGORIES -->
+<div class="slide" data-label="The Categories" data-section="Human Flourishing">
+<div class="slide-inner">
+<p class="label">06 &mdash; Human Flourishing</p>
+<h2 class="big">The categories that <span class="gold">matter.</span></h2>
+<div class="grid3" style="grid-template-columns:repeat(4,1fr);max-width:900px;gap:1px">
+<div class="card" style="border-top:2px solid var(--accent);text-align:center;padding:2rem 1rem">
+<p class="card-gold-title" style="font-size:1.2rem">Physical</p>
+<p class="card-body" style="font-size:0.8rem">Intimate health. Supplements. Longevity. Fitness.</p>
+<p style="font-size:0.65rem;margin-top:0.75rem;color:var(--accent);opacity:0.5">PROVEN</p>
+</div>
+<div class="card" style="border-top:2px solid rgba(201,184,122,0.3);text-align:center;padding:2rem 1rem">
+<p class="card-gold-title" style="font-size:1.2rem;opacity:0.7">Mental</p>
+<p class="card-body" style="font-size:0.8rem">Nootropics. Sleep. Stress. Mindfulness.</p>
+<p style="font-size:0.65rem;margin-top:0.75rem;color:var(--accent);opacity:0.3">NEXT</p>
+</div>
+<div class="card" style="border-top:2px solid rgba(201,184,122,0.3);text-align:center;padding:2rem 1rem">
+<p class="card-gold-title" style="font-size:1.2rem;opacity:0.7">Social</p>
+<p class="card-body" style="font-size:0.8rem">Community. Connection. Experiences. Events.</p>
+<p style="font-size:0.65rem;margin-top:0.75rem;color:var(--accent);opacity:0.3">NEXT</p>
+</div>
+<div class="card" style="border-top:2px solid rgba(201,184,122,0.3);text-align:center;padding:2rem 1rem">
+<p class="card-gold-title" style="font-size:1.2rem;opacity:0.7">Education</p>
+<p class="card-body" style="font-size:0.8rem">Learning. Growth. Skills. Personal development.</p>
+<p style="font-size:0.65rem;margin-top:0.75rem;color:var(--accent);opacity:0.3">NEXT</p>
+</div>
+</div>
+<p class="body ital" style="margin-top:1.5rem">Not categories. Human needs.<br/>The brands that serve them are 50 years old and 50&times; too expensive to run.</p>
+</div>
+</div>
+
+<!-- SLIDE 7: BUILD BUY FUND -->
+<div class="slide" data-label="Build &middot; Buy &middot; Fund" data-section="The Three Modes">
+<div class="slide-inner">
+<p class="label">07 &mdash; The Three Modes</p>
+<h2 class="big"><span class="gold">Build.</span> Buy. Fund.</h2>
+<div class="grid3">
+<div class="card-gold">
+<p class="card-gold-title">BUILD</p>
+<p class="card-body">Stand up brands from scratch using AI-native operations. Proven playbook. Repeatable.</p>
+</div>
+<div class="card-gold">
+<p class="card-gold-title">BUY</p>
+<p class="card-body">Acquire brands and founders cheaply. They have product-market fit and manufacturing. We bring the AI operating system and capital.</p>
+</div>
+<div class="card-gold">
+<p class="card-gold-title">FUND</p>
+<p class="card-body">Minority positions in exceptional founders. Plug them into the infrastructure. Let them run.</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- SLIDE 8: THE MOAT -->
+<div class="slide" data-label="The Moat" data-section="The Moat">
+<div class="slide-inner">
+<p class="label">08 &mdash; The Moat</p>
+<h2 class="huge">What AI <span class="dim">can&rsquo;t</span> replace.</h2>
+<div class="moat-list">
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text">Manufacturing relationships &mdash; years to build, impossible to fake.</p></div>
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text">Product IP and formulations &mdash; defensible and patentable.</p></div>
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text">Brand trust with real humans &mdash; earned, not generated.</p></div>
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text">Community with embodied, real-life network effects.</p></div>
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text">The operating system itself &mdash; the playbook, the infrastructure, the team.</p></div>
+</div>
+</div>
+</div>
+
+<!-- SLIDE 9: URGENCY -->
+<div class="slide" data-label="The Urgency" data-section="The Urgency">
+<div class="slide-inner">
+<p class="label">09 &mdash; The Urgency</p>
+<h2 class="huge">The window is <span class="gold">now.</span></h2>
+<div class="divider"></div>
+<p class="body">A Chinese factory with AI tools can replicate your digital presence tomorrow.</p>
+<p class="body">But they can&rsquo;t fake ten years of manufacturing trust. They can&rsquo;t buy community. They can&rsquo;t generate brand love.</p>
+<p class="body white">First-mover in DTC 3.0 consolidation = generational wealth creation.</p>
+<p class="body ital">Every quarter you wait, AI compresses the advantage further.</p>
+</div>
+</div>
+
+<!-- SLIDE 10: FOUNDER -->
+<div class="slide" data-label="The Founder" data-section="The Founder">
+<div class="slide-inner">
+<p class="label">10 &mdash; The Founder</p>
+<h2 class="huge">I <span class="dim">don&rsquo;t need</span> to do this.</h2>
+<div class="divider"></div>
+<p class="body">Built it. Proved it. Could chill.</p>
+<p class="body">Operator, not theorist. Track record, not pitch deck.<br/>The business prints cash. The team is lean. The systems run themselves.</p>
+<p class="editorial-accent">But I see something too big to ignore.</p>
+</div>
+</div>
+
+<!-- SLIDE 11: THE ASK -->
+<div class="slide" data-label="The Ask" data-section="The Ask">
+<div class="slide-inner">
+<p class="label">11 &mdash; The Ask</p>
+<h2 class="big"><span class="gold">Capital</span> &times; Playbook = Category Dominance</h2>
+<div class="divider"></div>
+<p class="body">What capital unlocks: simultaneous multi-category expansion.</p>
+<p class="body">Acquire physical moats &mdash; manufacturing, brand trust, community &mdash; across wellness, beauty, home, food, personal care.</p>
+<p class="body">Layer in the AI operating system. Margins expand. Growth accelerates. Repeat.</p>
+<p class="body ital">The infrastructure is built. The playbook is proven. The categories are wide open.</p>
+</div>
+</div>
+
+<!-- SLIDE 14: THE STRUCTURE -->
+<div class="slide" data-label="The Structure" data-section="The Structure">
+<div class="slide-inner">
+<p class="label">12 &mdash; The Structure</p>
+<h2 class="big">Growth equity <span class="dim">now.</span><br/>Platform fund <span class="gold">next.</span></h2>
+<div class="divider"></div>
+<div class="grid3" style="max-width:700px;gap:1px">
+<div class="card" style="border-left:2px solid var(--accent);text-align:left">
+<p class="card-gold-title" style="font-size:1rem">Phase 1</p>
+<p class="card-body" style="font-size:0.85rem">Minority raise. Fund immediate acquisitions. Prove the portfolio thesis.</p>
+</div>
+<div class="card" style="border-left:2px solid rgba(201,184,122,0.5);text-align:left">
+<p class="card-gold-title" style="font-size:1rem;opacity:0.7">Phase 2</p>
+<p class="card-body" style="font-size:0.85rem">Launch the platform fund. C&amp;B as GP. Deploy across Build, Buy, Fund.</p>
+</div>
+<div class="card" style="border-left:2px solid rgba(201,184,122,0.3);text-align:left">
+<p class="card-gold-title" style="font-size:1rem;opacity:0.5">Phase 3</p>
+<p class="card-body" style="font-size:0.85rem">15&ndash;25 brands. $500M+ revenue. The machine runs itself.</p>
+</div>
+</div>
+<p class="body ital" style="margin-top:1.5rem">We&rsquo;re not raising to survive. We&rsquo;re raising to consolidate.</p>
+</div>
+</div>
+
+<!-- SLIDE 15: CLOSE -->
+<div class="slide" data-label="The Vision" data-section="The Vision">
+<div class="slide-inner">
+<p class="label">13 &mdash; The Vision</p>
+<h2 class="huge">We&rsquo;re not building a brand.</h2>
+<h2 class="huge" style="margin-top:0.25rem">We&rsquo;re building the <span class="gold">machine</span><br/>that builds brands.</h2>
+<div class="divider"></div>
+<p class="body ital">In 10 years, the biggest consumer company in the world won&rsquo;t own a single factory.<br/>But every factory will want to work with them.</p>
+<p class="talk">&nearr; Let&rsquo;s talk.</p>
+</div>
+</div>
+
+<!-- ═══════════ APPENDIX ═══════════ -->
+
+<!-- A0: APPENDIX DIVIDER -->
+<div class="slide" data-label="Appendix" data-section="Appendix">
+<div class="slide-inner">
+<div class="divider" style="width:6rem;margin-bottom:2rem"></div>
+<h2 class="huge" style="opacity:0.4">Appendix</h2>
+<p class="body ital">The numbers behind the machine.</p>
+</div>
+</div>
+
+<!-- A1: VALUATION MATH -->
+<div class="slide" data-label="Valuation" data-section="Valuation Math">
+<div class="slide-inner">
+<p class="label">A1 &mdash; Valuation</p>
+<h2 class="big">Why <span class="gold">$300&ndash;500M.</span></h2>
+<div class="stat-row">
+<div class="stat-box"><p class="stat-num">$80M</p><p class="stat-label">ARR (run rate)</p></div>
+<div class="stat-box"><p class="stat-num">15&ndash;20%</p><p class="stat-label">EBIT margin</p></div>
+<div class="stat-box"><p class="stat-num">$12&ndash;16M</p><p class="stat-label">Annual profit</p></div>
+</div>
+<table class="tbl">
+<tr><th>Lens</th><th>Multiple</th><th>Valuation</th></tr>
+<tr><td>Single brand</td><td>10x EBIT</td><td style="color:rgba(255,255,255,0.5)">$120&ndash;160M</td></tr>
+<tr><td>+ AI premium (35%)</td><td>12x EBIT</td><td style="color:rgba(255,255,255,0.6)">$195&ndash;260M</td></tr>
+<tr><td>Platform thesis</td><td>15&ndash;20x EBIT</td><td style="color:var(--accent)">$300&ndash;400M+</td></tr>
+</table>
+<p class="body ital" style="margin-top:1rem;font-size:0.85rem">Pattern Brands: $500M valuation. Less revenue. Worse margins.</p>
+</div>
+</div>
+
+<!-- A2: USE OF FUNDS -->
+<div class="slide" data-label="Use of Funds" data-section="Use of Funds">
+<div class="slide-inner">
+<p class="label">A2 &mdash; Use of Funds</p>
+<h2 class="big">Where <span class="gold">$25&ndash;50M</span> goes.</h2>
+<div class="grid3" style="max-width:800px;gap:1px">
+<div class="card" style="border-top:2px solid var(--accent)">
+<p class="stat-num" style="font-size:1.8rem">60%</p>
+<p class="card-gold-title" style="font-size:1rem">Acquisitions</p>
+<p class="card-body">$15&ndash;30M &mdash; 5&ndash;8 brands at 2&ndash;4x EBIT. Each gets the AI OS. Margins expand 5&ndash;15% within 12 months.</p>
+</div>
+<div class="card" style="border-top:2px solid rgba(201,184,122,0.5)">
+<p class="stat-num" style="font-size:1.8rem">25%</p>
+<p class="card-gold-title" style="font-size:1rem">New Categories</p>
+<p class="card-body">$6&ndash;12M &mdash; Launch 2&ndash;3 brands from scratch. Mental wellness, supplements, longevity. Playbook proven.</p>
+</div>
+<div class="card" style="border-top:2px solid rgba(201,184,122,0.3)">
+<p class="stat-num" style="font-size:1.8rem">15%</p>
+<p class="card-gold-title" style="font-size:1rem">Infrastructure</p>
+<p class="card-body">$4&ndash;7M &mdash; AI operating system buildout, manufacturing, team scaling to 8&ndash;10 max.</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- A3: ACQUISITION PIPELINE -->
+<div class="slide" data-label="Pipeline" data-section="Acquisition Pipeline">
+<div class="slide-inner">
+<p class="label">A3 &mdash; Acquisition Pipeline</p>
+<h2 class="big">The deals we <span class="gold">see.</span></h2>
+<table class="tbl">
+<tr><th>Target</th><th>Status</th><th>Price</th><th>Thesis</th></tr>
+<tr><td style="color:var(--accent)">Biird</td><td>DONE</td><td>$400K / 100%</td><td>European premium design</td></tr>
+<tr><td style="color:var(--accent)">MyMuse</td><td>DONE</td><td>$1M / swap</td><td>India market entry</td></tr>
+<tr><td style="color:rgba(201,184,122,0.6)">Pelvic People</td><td>IN PROGRESS</td><td>&lt;$3M / 51%</td><td>Medical-grade category</td></tr>
+<tr><td style="color:rgba(255,255,255,0.25)">Brand A</td><td>Pipeline</td><td>3x EBIT</td><td>$12M rev, supplements. AI OS &rarr; 20%+ EBIT</td></tr>
+<tr><td style="color:rgba(255,255,255,0.25)">Brand B</td><td>Pipeline</td><td>2x rev</td><td>$8M rev, home wellness. AI OS &rarr; 15%+ EBIT</td></tr>
+<tr><td style="color:rgba(255,255,255,0.25)">Brand C</td><td>Pipeline</td><td>$2M</td><td>$5M rev, founder exit. AI OS &rarr; $15M in 18mo</td></tr>
+</table>
+</div>
+</div>
+
+<!-- A4: AI OPERATING SYSTEM -->
+<div class="slide" data-label="AI OS" data-section="The AI Operating System">
+<div class="slide-inner">
+<p class="label">A4 &mdash; The AI Operating System</p>
+<h2 class="big">What the <span class="gold">machine</span> actually does.</h2>
+<div class="moat-list" style="max-width:650px">
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text"><span class="white">6:00 AM</span> &mdash; Daily briefing: revenue, profit, anomalies, action items</p></div>
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text"><span class="white">Every 15 min</span> &mdash; Ad performance monitoring, budget reallocation</p></div>
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text"><span class="white">Every ticket</span> &mdash; CS quality audit, sentiment tracking, escalation</p></div>
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text"><span class="white">Continuous</span> &mdash; SERP tracking, competitor monitoring, creative analysis</p></div>
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text"><span class="white">Weekly</span> &mdash; P&amp;L calculation, performance reports, strategy recommendations</p></div>
+</div>
+<div class="stat-row" style="max-width:500px;margin-top:2rem">
+<div class="stat-box"><p class="stat-num">$50K</p><p class="stat-label">AI infra / year</p></div>
+<div class="stat-box"><p class="stat-num" style="color:rgba(255,255,255,0.2)">$2M+</p><p class="stat-label">Equivalent human team</p></div>
+</div>
+</div>
+</div>
+
+<!-- A5: UNIT ECONOMICS -->
+<div class="slide" data-label="Unit Economics" data-section="The 90% Compression">
+<div class="slide-inner">
+<p class="label">A5 &mdash; Unit Economics</p>
+<h2 class="big">The <span class="gold">90%</span> compression.</h2>
+<table class="tbl">
+<tr><th></th><th>Traditional DTC</th><th style="color:var(--accent)">AI-Native (Us)</th></tr>
+<tr><td>Team size</td><td>20&ndash;50 people</td><td style="color:var(--accent)">3&ndash;5 people</td></tr>
+<tr><td>Payroll</td><td>$2&ndash;5M/yr</td><td style="color:var(--accent)">&lt;$500K/yr</td></tr>
+<tr><td>Tools &amp; SaaS</td><td>$300&ndash;500K/yr</td><td style="color:var(--accent)">$50K/yr</td></tr>
+<tr><td>Time to launch</td><td>6&ndash;12 months</td><td style="color:var(--accent)">4&ndash;8 weeks</td></tr>
+<tr><td>EBIT margin</td><td>3&ndash;8%</td><td style="color:var(--accent)">15&ndash;25%</td></tr>
+<tr><td>Scaling cost</td><td>Linear</td><td style="color:var(--accent)">Near-zero marginal</td></tr>
+</table>
+</div>
+</div>
+
+<!-- A6: PATH TO $1B -->
+<div class="slide" data-label="Path to $1B" data-section="The Roadmap">
+<div class="slide-inner">
+<p class="label">A6 &mdash; The Roadmap</p>
+<h2 class="big">Path to <span class="gold">$1B.</span></h2>
+<div class="timeline">
+<div class="tl-item"><span class="tl-year">Year 0</span><span class="tl-desc">$80M revenue &middot; $12&ndash;16M EBIT &middot; 1 core brand + 3 acquisitions</span></div>
+<div class="tl-item"><span class="tl-year">Year 1</span><span class="tl-desc">$120M revenue &middot; $20&ndash;28M EBIT &middot; 5&ndash;8 brands &middot; 2 new categories</span></div>
+<div class="tl-item"><span class="tl-year">Year 2</span><span class="tl-desc">$200M revenue &middot; $35&ndash;50M EBIT &middot; 10&ndash;12 brands &middot; Platform fund launched</span></div>
+<div class="tl-item"><span class="tl-year">Year 3</span><span class="tl-desc">$350M revenue &middot; $55&ndash;75M EBIT &middot; 15&ndash;18 brands &middot; 4 categories</span></div>
+<div class="tl-item"><span class="tl-year">Year 4</span><span class="tl-desc">$500M+ revenue &middot; $75&ndash;100M EBIT &middot; 20+ brands</span></div>
+</div>
+<div class="stat-row" style="max-width:500px;margin-top:1.5rem">
+<div class="stat-box"><p class="stat-num">12x</p><p class="stat-label">$900M&ndash;1.2B</p></div>
+<div class="stat-box"><p class="stat-num">15x</p><p class="stat-label">$1.1&ndash;1.5B</p></div>
+</div>
+<p class="body ital" style="font-size:0.85rem;margin-top:1rem">3&ndash;5x return at $300&ndash;500M entry. Venture returns. PE cash flow.</p>
+</div>
+</div>
+
+<!-- A7: PHASED RAISE -->
+<div class="slide" data-label="Phased Raise" data-section="The Phased Raise">
+<div class="slide-inner">
+<p class="label">A7 &mdash; The Phased Raise</p>
+<h2 class="big">Three <span class="gold">phases.</span></h2>
+<div class="grid3" style="max-width:800px;gap:1px">
+<div class="card" style="border-top:2px solid var(--accent)">
+<p class="card-gold-title" style="font-size:1rem">Phase 1 &mdash; Now</p>
+<p class="stat-num" style="font-size:1.5rem;margin-top:0.5rem">$25&ndash;50M</p>
+<p class="card-body">Minority raise via TD Securities.<br/>$300&ndash;400M pre-money. 5&ndash;10% dilution.<br/>Fund immediate acquisitions.</p>
+</div>
+<div class="card" style="border-top:2px solid rgba(201,184,122,0.5)">
+<p class="card-gold-title" style="font-size:1rem;opacity:0.7">Phase 2 &mdash; 12&ndash;18 Mo</p>
+<p class="stat-num" style="font-size:1.5rem;margin-top:0.5rem;opacity:0.7">$100&ndash;250M</p>
+<p class="card-body">Platform fund. C&amp;B as GP.<br/>2% management + 20% carry.<br/>Deploy across Build, Buy, Fund.</p>
+</div>
+<div class="card" style="border-top:2px solid rgba(201,184,122,0.3)">
+<p class="card-gold-title" style="font-size:1rem;opacity:0.5">Phase 3 &mdash; 24&ndash;36 Mo</p>
+<p class="stat-num" style="font-size:1.5rem;margin-top:0.5rem;opacity:0.5">$1B+</p>
+<p class="card-body">IPO or stay private.<br/>Berkshire model.<br/>The machine compounds.</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- A8: RISK & MITIGATION -->
+<div class="slide" data-label="Risk" data-section="Risk &amp; Mitigation">
+<div class="slide-inner">
+<p class="label">A8 &mdash; Risk &amp; Mitigation</p>
+<h2 class="big">What could go wrong.<br/><span class="gold">And why it won&rsquo;t.</span></h2>
+<div style="max-width:650px;margin-top:1.5rem">
+<div class="risk-item"><span class="risk-label">Meta dependency</span><span class="risk-text">Diversifying: Google 1.8x ROAS, Amazon 5x ROAS, Boots UK retail, organic/SEO</span></div>
+<div class="risk-item"><span class="risk-label">Single brand</span><span class="risk-text">Already 4 brands (Nancy, Biird, MyMuse, IM8). Expanding to 10+</span></div>
+<div class="risk-item"><span class="risk-label">Founder risk</span><span class="risk-text">AI OS runs autonomously. Systems, not heroics.</span></div>
+<div class="risk-item"><span class="risk-label">Category risk</span><span class="risk-text">Multi-category from day 1. Physical, mental, social, education.</span></div>
+<div class="risk-item"><span class="risk-label">Thrasio comp</span><span class="risk-text">NOT comparable: 15&ndash;25% EBIT (they: negative), AI-native (they: bloated), diversified (they: Amazon-only)</span></div>
+</div>
+</div>
+</div>
+
+<!-- A9: TEAM -->
+<div class="slide" data-label="Team" data-section="Team &amp; Leverage">
+<div class="slide-inner">
+<p class="label">A9 &mdash; Team &amp; Leverage</p>
+<h2 class="big">Smallest team in consumer.<br/><span class="gold">Biggest output.</span></h2>
+<div class="moat-list" style="max-width:600px;margin-top:1.5rem">
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text"><span class="white">Rahul</span> &mdash; CEO. Built $0&rarr;$80M. Operator, not theorist.</p></div>
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text"><span class="white">Core team</span> &mdash; 3&ndash;5 operators running the entire portfolio</p></div>
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text"><span class="white">AI layer</span> &mdash; 24/7 autonomous. Never sleeps. $50K/yr.</p></div>
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text"><span class="white">Manufacturing</span> &mdash; 5+ Dongguan factories. Disney-tier quality.</p></div>
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text"><span class="white">Growth</span> &mdash; Mehdi ($300K comp, performance at $180&ndash;240M)</p></div>
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text"><span class="white">Capital markets</span> &mdash; TD Securities. Celebrity pipeline (Kyrgios, VanZant)</p></div>
+</div>
+</div>
+</div>
+
+<!-- A10: WHY NOW -->
+<div class="slide" data-label="Why Now" data-section="The Window">
+<div class="slide-inner">
+<p class="label">A10 &mdash; The Window</p>
+<h2 class="huge"><span class="gold">18</span> months.</h2>
+<div class="divider"></div>
+<div class="moat-list" style="max-width:600px">
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text"><span class="white">AI compression accelerating</span> &mdash; first movers consolidate physical assets NOW</p></div>
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text"><span class="white">Founders burning out</span> &mdash; acquisition prices at historic lows (2&ndash;4x EBIT vs 8&ndash;12x in 2021)</p></div>
+<div class="moat-item"><span class="moat-dot">&#9670;</span><p class="moat-text"><span class="white">Legacy can&rsquo;t adapt</span> &mdash; 50-year-old operating models, boards that move at 50-year-old speed</p></div>
+</div>
+<p class="editorial-accent" style="margin-top:2rem">&ldquo;Every quarter you wait, someone else figures this out.&rdquo;</p>
+</div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+<button class="nav-btn" id="prev" disabled>&#8249;</button>
+<button class="nav-btn" id="next">&#8250;</button>
+</div>
+</div>
+
+<script>
+(function(){
+  var slides = document.querySelectorAll('.slide');
+  var total = slides.length;
+  var cur = 0;
+  var prevBtn = document.getElementById('prev');
+  var nextBtn = document.getElementById('next');
+  var pbar = document.getElementById('pbar');
+  var counter = document.getElementById('counter');
+  var slabel = document.getElementById('slabel');
+  var czl = document.getElementById('czl');
+  var czr = document.getElementById('czr');
+
+  function show(idx) {
+    if (idx < 0 || idx >= total || idx === cur) return;
+    slides[cur].classList.remove('active');
+    cur = idx;
+    slides[cur].classList.add('active');
+    prevBtn.disabled = cur === 0;
+    nextBtn.disabled = cur === total - 1;
+    pbar.style.width = ((cur + 1) / total * 100) + '%';
+    counter.textContent = String(cur + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+    var section = slides[cur].getAttribute('data-section');
+    slabel.textContent = section || slides[cur].getAttribute('data-label') || '/dtc-3.0';
+  }
+
+  prevBtn.addEventListener('click', function(){ show(cur - 1); });
+  nextBtn.addEventListener('click', function(){ show(cur + 1); });
+  czl.addEventListener('click', function(){ show(cur - 1); });
+  czr.addEventListener('click', function(){ show(cur + 1); });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown') { e.preventDefault(); show(cur + 1); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); show(cur - 1); }
+  });
+
+  var startX = 0;
+  document.addEventListener('touchstart', function(e){ startX = e.touches[0].clientX; });
+  document.addEventListener('touchend', function(e){
+    var diff = startX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) show(cur + (diff > 0 ? 1 : -1));
+  });
+
+  show(0);
+  // Reset initial state
+  prevBtn.disabled = true;
+  pbar.style.width = (1/total*100) + '%';
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DTC 3.0 — Care & Bloom</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'PP Editorial New';src:url('PPEditorialNew-Ultralight.otf') format('opentype');font-weight:200;font-style:normal}
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#050505;--card:rgba(255,255,255,0.03);--card-border:rgba(255,255,255,0.06);
+--gold:#C9B87A;--gold-dim:rgba(201,184,122,0.15);--cream:#f5f0e8;
+--text:#e8e4dc;--dim:rgba(255,255,255,0.35);--body-dim:rgba(255,255,255,0.55);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif}
+body{background:linear-gradient(170deg,#0a0a0a 0%,#050505 40%,#020202 100%)}
+
+/* --- GRAIN OVERLAY --- */
+body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
+opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")}
+
+/* --- BLOB --- */
+.blob{position:fixed;width:600px;height:600px;border-radius:50%;filter:blur(120px);opacity:0.04;pointer-events:none;z-index:0}
+.blob-1{top:-200px;right:-100px;background:var(--gold);animation:morph 20s ease-in-out infinite}
+.blob-2{bottom:-200px;left:-150px;background:var(--gold);animation:morph 25s ease-in-out infinite reverse}
+@keyframes morph{0%,100%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%;transform:rotate(0deg) scale(1)}50%{border-radius:30% 60% 70% 40%/50% 60% 30% 60%;transform:rotate(180deg) scale(1.1)}}
+
+/* --- SLIDES --- */
+.deck{position:relative;width:100%;height:100vh}
+.slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+opacity:0;visibility:hidden;transition:opacity 0.6s ease,visibility 0.6s ease;z-index:1;padding:40px}
+.slide.active{opacity:1;visibility:visible;z-index:2}
+.slide-inner{max-width:900px;width:100%;position:relative;z-index:1}
+
+/* --- STAGGER ANIMATIONS --- */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.slide.active .slide-inner>*{opacity:0;animation:fadeUp 0.5s ease forwards}
+.slide.active .slide-inner>*:nth-child(1){animation-delay:0.05s}
+.slide.active .slide-inner>*:nth-child(2){animation-delay:0.12s}
+.slide.active .slide-inner>*:nth-child(3){animation-delay:0.19s}
+.slide.active .slide-inner>*:nth-child(4){animation-delay:0.26s}
+.slide.active .slide-inner>*:nth-child(5){animation-delay:0.33s}
+.slide.active .slide-inner>*:nth-child(6){animation-delay:0.40s}
+.slide.active .slide-inner>*:nth-child(7){animation-delay:0.47s}
+.slide.active .slide-inner>*:nth-child(8){animation-delay:0.54s}
+.slide.active .slide-inner>*:nth-child(9){animation-delay:0.61s}
+.slide.active .slide-inner>*:nth-child(10){animation-delay:0.68s}
+
+/* --- TYPOGRAPHY --- */
+.label{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:32px;font-weight:500}
+.huge{font-family:'PP Editorial New',Georgia,serif;font-size:clamp(56px,8vw,96px);font-weight:200;line-height:1.05;letter-spacing:-2px;color:var(--cream)}
+.big{font-family:'PP Editorial New',Georgia,serif;font-size:clamp(32px,4.5vw,52px);font-weight:200;line-height:1.15;letter-spacing:-1px;color:var(--cream)}
+.medium{font-family:'PP Editorial New',Georgia,serif;font-size:clamp(24px,3vw,36px);font-weight:200;line-height:1.25;color:var(--cream)}
+.body{font-size:16px;line-height:1.7;color:var(--body-dim);max-width:680px;margin-top:20px;font-weight:300}
+.gold{color:var(--gold)}
+.dim{color:var(--dim)}
+.struck{text-decoration:line-through;color:var(--dim)}
+.ital{font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200}
+.divider{width:48px;height:1px;background:var(--gold);opacity:0.4;margin:28px 0}
+.editorial-accent{font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:clamp(20px,2.5vw,28px);color:var(--cream);margin-top:24px;line-height:1.4}
+
+/* --- STAT ROW --- */
+.stat-row{display:flex;gap:32px;margin-top:32px;flex-wrap:wrap}
+.stat-box{flex:1;min-width:140px;padding:20px 24px;background:var(--card);border:1px solid var(--card-border);border-radius:12px}
+.stat-num{font-family:'PP Editorial New',Georgia,serif;font-size:clamp(28px,3.5vw,42px);font-weight:200;color:var(--gold);letter-spacing:-1px}
+.stat-label{font-size:12px;color:var(--dim);margin-top:6px;text-transform:uppercase;letter-spacing:1.5px;font-weight:500}
+
+/* --- SPLIT COLUMNS --- */
+.split-cols{display:flex;gap:48px;margin-top:32px}
+.col{flex:1}
+.col-header{font-size:13px;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--card-border)}
+.col-header.gold-h{color:var(--gold);border-color:rgba(201,184,122,0.2)}
+.col-header.dim-h{color:var(--dim);border-color:var(--card-border)}
+.col-item{font-size:14px;line-height:1.6;padding:8px 0;color:var(--body-dim);border-bottom:1px solid rgba(255,255,255,0.03)}
+.col-item.gold-item{color:var(--cream)}
+.col-item.dim-item{color:var(--dim);text-decoration:line-through;opacity:0.6}
+.col-item small{display:block;font-size:11px;color:var(--dim);margin-top:2px}
+
+/* --- GRID --- */
+.grid-2x2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:28px}
+.grid-2x3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:28px}
+.ref-card{padding:20px 24px;background:var(--card);border:1px solid var(--card-border);border-radius:12px}
+.ref-card .ref-num{font-family:'PP Editorial New',Georgia,serif;font-size:clamp(28px,3vw,38px);font-weight:200;color:var(--gold);letter-spacing:-1px}
+.ref-card .ref-name{font-size:13px;color:var(--cream);margin-top:6px;font-weight:500}
+.ref-card .ref-detail{font-size:12px;color:var(--dim);margin-top:4px}
+.cat-card{padding:20px 24px;background:var(--card);border:1px solid var(--card-border);border-radius:12px;position:relative}
+.cat-card .cat-name{font-size:15px;color:var(--cream);font-weight:500}
+.cat-card .cat-size{font-family:'PP Editorial New',Georgia,serif;font-size:22px;color:var(--gold);margin-top:8px;font-weight:200}
+.cat-card .cat-tag{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);background:var(--gold-dim);padding:3px 10px;border-radius:20px;display:inline-block;margin-top:10px;font-weight:600}
+.cat-card .cat-tag.next{color:var(--body-dim);background:rgba(255,255,255,0.05)}
+.cat-card .cat-tag.future{color:var(--dim);background:rgba(255,255,255,0.03)}
+
+/* --- DEPLOY BARS --- */
+.deploy-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:28px}
+.deploy-item{padding:16px 20px;background:var(--card);border:1px solid var(--card-border);border-radius:12px}
+.deploy-pct{font-family:'PP Editorial New',Georgia,serif;font-size:32px;color:var(--gold);font-weight:200}
+.deploy-name{font-size:13px;color:var(--cream);margin-top:4px;font-weight:500}
+
+/* --- MOAT LIST --- */
+.moat-list{margin-top:24px}
+.moat-item{padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:15px;color:var(--body-dim);display:flex;align-items:baseline;gap:12px}
+.moat-item::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:6px}
+
+/* --- TIMELINE --- */
+.timeline{margin-top:28px;display:flex;gap:24px}
+.tl-item{flex:1;padding:16px 20px;border-left:2px solid var(--gold-dim);position:relative}
+.tl-item::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--gold);position:absolute;left:-5px;top:18px}
+.tl-year{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:600}
+.tl-val{font-family:'PP Editorial New',Georgia,serif;font-size:24px;color:var(--cream);margin-top:6px;font-weight:200}
+.tl-desc{font-size:12px;color:var(--dim);margin-top:4px}
+
+/* --- TABLE --- */
+.tbl{width:100%;margin-top:24px;border-collapse:collapse}
+.tbl th{text-align:left;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);font-weight:500;padding:12px 16px;border-bottom:1px solid var(--card-border)}
+.tbl td{padding:12px 16px;font-size:14px;color:var(--body-dim);border-bottom:1px solid rgba(255,255,255,0.03)}
+.tbl td:first-child{color:var(--cream);font-weight:500}
+.tbl .gold-cell{color:var(--gold);font-family:'PP Editorial New',Georgia,serif;font-size:18px;font-weight:200}
+
+/* --- NAV --- */
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:linear-gradient(transparent,rgba(0,0,0,0.8))}
+.nav-btn{background:none;border:1px solid var(--card-border);color:var(--dim);width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s}
+.nav-btn:hover{border-color:var(--gold);color:var(--gold)}
+.nav-btn svg{width:16px;height:16px}
+.progress{display:flex;align-items:center;gap:12px}
+.progress-bar{width:120px;height:2px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--gold);transition:width 0.4s ease;border-radius:2px}
+.counter{font-size:12px;color:var(--dim);letter-spacing:1px;font-variant-numeric:tabular-nums}
+.section-label{font-size:11px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;min-width:120px;text-align:right}
+
+/* --- CLICK ZONES --- */
+.click-left,.click-right{position:fixed;top:0;bottom:60px;z-index:50;cursor:pointer}
+.click-left{left:0;width:20%}
+.click-right{right:0;width:20%}
+
+/* --- APPENDIX SEPARATOR --- */
+.appendix-label{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);opacity:0.5;margin-bottom:40px}
+
+/* --- RESPONSIVE --- */
+@media(max-width:768px){
+  .slide{padding:24px 20px}
+  .stat-row{gap:12px}.stat-box{min-width:100px;padding:14px 16px}
+  .split-cols{flex-direction:column;gap:28px}
+  .grid-2x2,.deploy-grid{grid-template-columns:1fr}
+  .grid-2x3{grid-template-columns:1fr 1fr}
+  .timeline{flex-direction:column;gap:12px}
+  .nav{padding:12px 20px}
+  .huge{letter-spacing:-1px}
+}
+@media(max-width:480px){
+  .grid-2x3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="click-left" onclick="prev()"></div>
+<div class="click-right" onclick="next()"></div>
+
+<div class="deck">
+
+<!-- ============ SLIDE 1: TITLE ============ -->
+<div class="slide active" data-label="Care & Bloom">
+<div class="slide-inner" style="text-align:center">
+  <div class="label">Care & Bloom · 2026</div>
+  <div class="huge">DTC <span class="gold">3.0</span></div>
+  <div class="divider" style="margin:28px auto"></div>
+  <div class="medium" style="color:var(--body-dim)">The Infrastructure Era of Consumer Brands</div>
+  <div class="editorial-accent" style="margin-top:40px;opacity:0.7">We don't build brands.<br>We build the machine that builds brands.</div>
+</div>
+</div>
+
+<!-- ============ SLIDE 2: THE SHIFT ============ -->
+<div class="slide" data-label="The Shift">
+<div class="slide-inner">
+  <div class="label">01 — The Shift</div>
+  <div class="big">Everything that was <span class="gold">hard</span> is now easy.</div>
+  <div class="big" style="margin-top:8px">Everything that was easy is now <span class="gold">hard.</span></div>
+  <div class="body" style="margin-top:32px">
+    <span class="dim" style="text-decoration:line-through">Paid media. Landing pages. Customer service. Analytics. Content creation.</span>
+    <br><br>AI killed the moat of operations. The only moats left are physical.
+  </div>
+  <div class="stat-row" style="margin-top:36px">
+    <div class="stat-box"><div class="stat-num" style="font-size:18px;color:var(--gold)">Manufacturing</div></div>
+    <div class="stat-box"><div class="stat-num" style="font-size:18px;color:var(--gold)">Trust</div></div>
+    <div class="stat-box"><div class="stat-num" style="font-size:18px;color:var(--gold)">Community</div></div>
+    <div class="stat-box"><div class="stat-num" style="font-size:18px;color:var(--gold)">Relationships</div></div>
+  </div>
+</div>
+</div>
+
+<!-- ============ SLIDE 3: DISNEYLAND ============ -->
+<div class="slide" data-label="The Metaphor">
+<div class="slide-inner">
+  <div class="label">02 — The Metaphor</div>
+  <div class="big"><span class="dim">Anyone can build Disney.</span></div>
+  <div class="big" style="margin-top:12px">Only a few can build <span class="gold">Disneyland.</span></div>
+  <div class="body" style="margin-top:32px">
+    <strong style="color:var(--dim)">Disney</strong> = IP, content, brand, digital presence. A laptop and an API key.<br><br>
+    <strong style="color:var(--gold)">Disneyland</strong> = manufacturing, physical product, supply chain trust, embodied community, retail distribution. Years of relationships. Can't be faked.
+  </div>
+  <div class="editorial-accent" style="margin-top:40px">We build Disneylands.</div>
+</div>
+</div>
+
+<!-- ============ SLIDE 4: WHAT DIED ============ -->
+<div class="slide" data-label="The Graveyard">
+<div class="slide-inner" style="text-align:center">
+  <div class="label">03 — The Graveyard</div>
+  <div class="huge"><span class="struck" style="font-size:clamp(48px,7vw,80px)">$10B</span> <span style="color:var(--dim);font-size:clamp(28px,3vw,40px)">→</span> <span class="gold">$0</span></div>
+  <div class="medium" style="margin-top:16px;color:var(--body-dim)">The Thrasio model is dead.</div>
+  <div class="body" style="margin:24px auto 0;text-align:center">Financial engineering on Amazon commodities. No soul, no moat, no community. Over-leveraged. Platform-dependent. PE mindset, not founder mentality.</div>
+  <div class="stat-row" style="justify-content:center;margin-top:32px">
+    <div class="stat-box" style="text-align:center"><div class="stat-label">Thrasio</div><div style="font-size:13px;color:var(--dim);margin-top:4px">$10B → Bankrupt</div></div>
+    <div class="stat-box" style="text-align:center"><div class="stat-label">Perch</div><div style="font-size:13px;color:var(--dim);margin-top:4px">Laid off 60%</div></div>
+    <div class="stat-box" style="text-align:center"><div class="stat-label">Berlin Brands</div><div style="font-size:13px;color:var(--dim);margin-top:4px">Shutdown</div></div>
+  </div>
+  <div class="editorial-accent" style="margin-top:36px">They bought commodities. We build empires.</div>
+</div>
+</div>
+
+<!-- ============ SLIDE 5: WHAT'S BEING BORN ============ -->
+<div class="slide" data-label="The New Era">
+<div class="slide-inner">
+  <div class="label">04 — The New Era</div>
+  <div class="big">AI-native brand <span class="gold">infrastructure.</span></div>
+  <div class="stat-row" style="margin-top:36px">
+    <div class="stat-box" style="flex:2;text-align:center">
+      <div class="stat-num" style="font-size:clamp(48px,6vw,72px)">80%</div>
+      <div class="stat-label">cost reduction per brand</div>
+    </div>
+  </div>
+  <div class="split-cols" style="margin-top:32px">
+    <div class="col">
+      <div class="col-header dim-h">Traditional</div>
+      <div class="col-item dim-item">20–30 people</div>
+      <div class="col-item dim-item">$2–2.5M/yr salaries</div>
+      <div class="col-item dim-item">6–12 months to launch</div>
+    </div>
+    <div class="col">
+      <div class="col-header gold-h">AI-Native</div>
+      <div class="col-item gold-item">2–3 people</div>
+      <div class="col-item gold-item">$300–400K/yr + tools</div>
+      <div class="col-item gold-item">4–8 weeks to launch</div>
+    </div>
+  </div>
+  <div class="editorial-accent" style="margin-top:32px">The cost to build trust hasn't changed.<br>That asymmetry is the entire opportunity.</div>
+</div>
+</div>
+
+<!-- ============ SLIDE 6: THE PROOF ============ -->
+<div class="slide" data-label="The Proof">
+<div class="slide-inner" style="text-align:center">
+  <div class="label">05 — The Proof</div>
+  <div class="huge"><span class="dim" style="font-size:clamp(36px,5vw,60px)">$0</span> <span style="color:var(--dim);font-size:clamp(24px,3vw,36px)">→</span> <span class="gold">$150M+</span></div>
+  <div class="stat-row" style="justify-content:center;margin-top:36px">
+    <div class="stat-box" style="text-align:center"><div class="stat-num">$12M</div><div class="stat-label">Monthly Revenue</div></div>
+    <div class="stat-box" style="text-align:center"><div class="stat-num">$40–50M</div><div class="stat-label">Free Cash Flow</div></div>
+    <div class="stat-box" style="text-align:center"><div class="stat-num">3</div><div class="stat-label">People</div></div>
+    <div class="stat-box" style="text-align:center"><div class="stat-num">$0</div><div class="stat-label">Outside Capital</div></div>
+  </div>
+  <div class="body" style="margin:28px auto 0;text-align:center">One brand. Built from scratch. Profitable from day one. No VC money needed to get here.</div>
+  <div class="editorial-accent" style="margin-top:28px">We didn't build a brand. We built a laboratory.<br>Now we know what works.</div>
+</div>
+</div>
+
+<!-- ============ SLIDE 7: DEFENSIBILITY STACK ============ -->
+<div class="slide" data-label="The Stack">
+<div class="slide-inner">
+  <div class="label">06 — The Stack</div>
+  <div class="big">The <span class="gold">hard</span> is the scalable.</div>
+  <div class="body" style="margin-top:12px">Everything easy gets commoditized. Everything hard compounds.</div>
+  <div class="split-cols" style="margin-top:32px">
+    <div class="col">
+      <div class="col-header gold-h">Hard = Scalable</div>
+      <div class="col-item gold-item">Manufacturing relationships<small>Years to build. Impossible to fake.</small></div>
+      <div class="col-item gold-item">Formulation IP + regulatory<small>FDA/CE = years of compliance.</small></div>
+      <div class="col-item gold-item">Celebrity / athlete / doctor trust<small>Earned IRL. Not bought.</small></div>
+      <div class="col-item gold-item">Physical retail + shelf space<small>Distribution networks compound.</small></div>
+      <div class="col-item gold-item">Community + events<small>Real-life network effects.</small></div>
+    </div>
+    <div class="col">
+      <div class="col-header dim-h">Easy = Commodity</div>
+      <div class="col-item dim-item">Content + creative<small>AI generates in seconds.</small></div>
+      <div class="col-item dim-item">Paid ads + performance<small>Anyone can spend on Meta.</small></div>
+      <div class="col-item dim-item">Landing pages + funnels<small>Templates everywhere.</small></div>
+      <div class="col-item dim-item">Customer service<small>Chatbots handle 90%.</small></div>
+      <div class="col-item dim-item">Analytics + reporting<small>Dashboards are free.</small></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============ SLIDE 8: PARTNERSHIP MODE ============ -->
+<div class="slide" data-label="Partnerships">
+<div class="slide-inner">
+  <div class="label">07 — Partnership Mode</div>
+  <div class="big"><span class="gold">Co-founders,</span> not endorsers.</div>
+  <div class="body">Celebrities. Athletes. Doctors. Experts. People building trust through events, community, real life. Not paid posts. Co-ownership. Skin in the game.</div>
+  <div class="grid-2x2">
+    <div class="ref-card"><div class="ref-num">$2.8B</div><div class="ref-name">Fenty Beauty</div><div class="ref-detail">Rihanna as co-creator · LVMH 50%</div></div>
+    <div class="ref-card"><div class="ref-num">$4B</div><div class="ref-name">Skims</div><div class="ref-detail">Kim K co-founder · $1B+ revenue</div></div>
+    <div class="ref-card"><div class="ref-num">$6.2B</div><div class="ref-name">Prime</div><div class="ref-detail">Logan Paul / KSI · $1B+ in &lt;2 years</div></div>
+    <div class="ref-card"><div class="ref-num">$1B</div><div class="ref-name">Casamigos</div><div class="ref-detail">George Clooney · Exit to Diageo</div></div>
+  </div>
+  <div class="editorial-accent">Every category has a face waiting to own it.<br>We provide the body.</div>
+</div>
+</div>
+
+<!-- ============ SLIDE 9: THE INFRASTRUCTURE ============ -->
+<div class="slide" data-label="The Disneyland">
+<div class="slide-inner">
+  <div class="label">08 — The Disneyland</div>
+  <div class="big">What we actually <span class="gold">provide.</span></div>
+  <div class="moat-list">
+    <div class="moat-item">Manufacturing relationships — 5+ factories, Disney-tier quality control</div>
+    <div class="moat-item">Formulation labs + product development pipeline</div>
+    <div class="moat-item">Global supply chain + logistics fulfillment</div>
+    <div class="moat-item">Regulatory compliance — FDA, CE, market-specific</div>
+    <div class="moat-item">AI operations stack — $50K/yr replaces $2M+ human team</div>
+    <div class="moat-item">Community engine + brand storytelling infrastructure</div>
+    <div class="moat-item">Retail distribution — Boots UK, Amazon, marketplace network</div>
+  </div>
+  <div class="editorial-accent">Took 4 years to build.<br>Takes 4 weeks to plug a new brand in.</div>
+</div>
+</div>
+
+<!-- ============ SLIDE 10: CATEGORIES ============ -->
+<div class="slide" data-label="Categories">
+<div class="slide-inner">
+  <div class="label">09 — The Categories</div>
+  <div class="big">The categories that <span class="gold">matter.</span></div>
+  <div class="grid-2x3">
+    <div class="cat-card"><div class="cat-name">Intimate Wellness</div><div class="cat-size">$30B → $45B</div><div class="cat-tag">Proven</div></div>
+    <div class="cat-card"><div class="cat-name">Longevity + Supplements</div><div class="cat-size">$60B+</div><div class="cat-tag next">Next</div></div>
+    <div class="cat-card"><div class="cat-name">Mental Health</div><div class="cat-size">$30B+</div><div class="cat-tag next">Next</div></div>
+    <div class="cat-card"><div class="cat-name">Fitness + Recovery</div><div class="cat-size">$40B+</div><div class="cat-tag future">Future</div></div>
+    <div class="cat-card"><div class="cat-name">Beauty + Skincare</div><div class="cat-size">$580B+</div><div class="cat-tag future">Future</div></div>
+    <div class="cat-card"><div class="cat-name">Sleep + Rest</div><div class="cat-size">$100B+</div><div class="cat-tag future">Future</div></div>
+  </div>
+  <div class="editorial-accent">$30B intimate wellness is the starting point.<br>The real TAM is multi-trillion.</div>
+</div>
+</div>
+
+<!-- ============ SLIDE 11: THE MATH ============ -->
+<div class="slide" data-label="The Math">
+<div class="slide-inner" style="text-align:center">
+  <div class="label">10 — The Math</div>
+  <div class="medium" style="color:var(--body-dim)">Nancy alone:</div>
+  <div class="huge" style="margin-top:8px"><span class="gold">$500M</span></div>
+  <div class="medium" style="color:var(--body-dim);margin-top:4px">in 5 years.</div>
+  <div class="body" style="margin:24px auto 0;text-align:center">Add 5–10 brands at $50–200M each. Portfolio: $1–2B revenue.</div>
+  <div class="timeline" style="margin-top:36px">
+    <div class="tl-item"><div class="tl-year">Now</div><div class="tl-val">$150M+</div><div class="tl-desc">Nancy + first acquisitions</div></div>
+    <div class="tl-item"><div class="tl-year">Year 2</div><div class="tl-val">$300–500M</div><div class="tl-desc">5–8 brands, 3 categories</div></div>
+    <div class="tl-item"><div class="tl-year">Year 5</div><div class="tl-val">$1–2B</div><div class="tl-desc">15–20 brands, multi-category</div></div>
+  </div>
+  <div class="editorial-accent" style="margin-top:32px">At LVMH multiples (3–5x revenue):<br><span class="gold" style="font-size:clamp(28px,3.5vw,44px)">$3–10B</span> enterprise value.</div>
+</div>
+</div>
+
+<!-- ============ SLIDE 12: WHY NOW ============ -->
+<div class="slide" data-label="The Window">
+<div class="slide-inner">
+  <div class="label">11 — The Window</div>
+  <div class="huge"><span class="gold">12</span> months.</div>
+  <div class="body" style="margin-top:28px">AI compression is a 12-month window. After that, the arbitrage closes.</div>
+  <div class="moat-list" style="margin-top:24px">
+    <div class="moat-item">Chinese factories + AI tools = they can replicate your digital presence tomorrow</div>
+    <div class="moat-item">But they can't fake 10 years of manufacturing trust</div>
+    <div class="moat-item">They can't buy community. They can't generate brand love.</div>
+    <div class="moat-item">Founder burnout = acquisition prices at historic lows (2–4x EBIT vs 8–12x in 2021)</div>
+  </div>
+  <div class="editorial-accent" style="margin-top:32px">First-mover in DTC 3.0 consolidation<br>= generational wealth creation.</div>
+</div>
+</div>
+
+<!-- ============ SLIDE 13: THE RAISE ============ -->
+<div class="slide" data-label="The Raise">
+<div class="slide-inner" style="text-align:center">
+  <div class="label">12 — The Raise</div>
+  <div class="huge"><span class="gold">$50–100M</span></div>
+  <div class="medium" style="margin-top:8px;color:var(--body-dim)">Growth equity. Not a startup round. A platform build.</div>
+  <div class="deploy-grid" style="margin-top:36px;text-align:left">
+    <div class="deploy-item"><div class="deploy-pct">50%</div><div class="deploy-name">Brand Acquisitions (3–5 brands)</div></div>
+    <div class="deploy-item"><div class="deploy-pct">20%</div><div class="deploy-name">Celebrity Partnerships (2–3 co-founder deals)</div></div>
+    <div class="deploy-item"><div class="deploy-pct">15%</div><div class="deploy-name">Infrastructure (manufacturing, retail, AI ops)</div></div>
+    <div class="deploy-item"><div class="deploy-pct">15%</div><div class="deploy-name">Geographic Expansion</div></div>
+  </div>
+  <div class="body" style="margin:28px auto 0;text-align:center">We raise from a position of strength. $40–50M FCF. Profitable. Growing. We don't need it to survive.</div>
+</div>
+</div>
+
+<!-- ============ SLIDE 14: THE FOUNDER ============ -->
+<div class="slide" data-label="The Founder">
+<div class="slide-inner" style="text-align:center">
+  <div class="label">13 — The Founder</div>
+  <div class="big"><span class="dim">I don't need your money.</span></div>
+  <div class="big" style="margin-top:12px"><span class="gold">I need your conviction.</span></div>
+  <div class="divider" style="margin:32px auto"></div>
+  <div class="body" style="margin:0 auto;text-align:center">Rahul Ramchand. Ex-VP Growth at Prenetics/CircleDNA — scaled genomics across Asia. Built a $150M+ brand with 3 people and zero outside capital. Also scaled the fastest-growing supplement brand as a side project.</div>
+  <div class="editorial-accent" style="margin-top:32px">The operator who doesn't need your money<br>but knows exactly how to deploy it.</div>
+</div>
+</div>
+
+<!-- ============ SLIDE 15: THE ASK ============ -->
+<div class="slide" data-label="The Vision">
+<div class="slide-inner" style="text-align:center">
+  <div class="label">14 — The Vision</div>
+  <div class="big">$50–100M to build the<br><span class="gold">LVMH of the AI era.</span></div>
+  <div class="divider" style="margin:36px auto"></div>
+  <div class="medium" style="margin-top:0"><span class="dim">We don't need it to survive.</span></div>
+  <div class="huge" style="margin-top:12px;font-size:clamp(36px,5vw,60px)"><span class="gold">We need it to dominate.</span></div>
+  <div class="editorial-accent" style="margin-top:48px;opacity:0.7">In 10 years, the biggest consumer company in the world<br>won't own a single factory.<br>But every factory will want to work with them.</div>
+  <div style="margin-top:48px;font-size:13px;color:var(--dim);letter-spacing:2px">LET'S TALK</div>
+</div>
+</div>
+
+<!-- ============ APPENDIX ============ -->
+
+<!-- ============ SLIDE 16: FINANCIALS ============ -->
+<div class="slide" data-label="Appendix · Financials">
+<div class="slide-inner">
+  <div class="appendix-label">Appendix</div>
+  <div class="label">A1 — Financials</div>
+  <div class="big">The <span class="gold">numbers.</span></div>
+  <table class="tbl">
+    <tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Monthly Revenue</td><td class="gold-cell">$12M</td></tr>
+    <tr><td>Annualized Run Rate</td><td class="gold-cell">$150M+</td></tr>
+    <tr><td>EBIT Margin</td><td>15–25%</td></tr>
+    <tr><td>Free Cash Flow</td><td class="gold-cell">$40–50M</td></tr>
+    <tr><td>Returning Customer Revenue</td><td>63% of daily</td></tr>
+    <tr><td>Active Subscriptions</td><td>84K+</td></tr>
+    <tr><td>Team Size</td><td>3–5 core + AI</td></tr>
+    <tr><td>Valuation (10x EBIT)</td><td class="gold-cell">$400–500M</td></tr>
+  </table>
+</div>
+</div>
+
+<!-- ============ SLIDE 17: PIPELINE ============ -->
+<div class="slide" data-label="Appendix · Pipeline">
+<div class="slide-inner">
+  <div class="appendix-label">Appendix</div>
+  <div class="label">A2 — Pipeline</div>
+  <div class="big">The deals we <span class="gold">see.</span></div>
+  <table class="tbl">
+    <tr><th>Brand</th><th>Status</th><th>Structure</th></tr>
+    <tr><td>Biird</td><td style="color:var(--gold)">Done</td><td>$400K / 100%</td></tr>
+    <tr><td>MyMuse</td><td style="color:var(--gold)">Done</td><td>$1M equity swap</td></tr>
+    <tr><td>Pelvic People</td><td>In Progress</td><td>&lt;$3M / 51%</td></tr>
+    <tr><td>Brand A (supplements)</td><td>Pipeline</td><td>$12M rev, 3x EBIT</td></tr>
+    <tr><td>Brand B (home wellness)</td><td>Pipeline</td><td>$8M rev, 2x revenue</td></tr>
+  </table>
+  <div class="body">Typical structure: 2–4x EBIT. Apply AI OS. Margins expand 5–15% within 12 months. Founders stay as co-operators.</div>
+</div>
+</div>
+
+<!-- ============ SLIDE 18: PARTNERSHIPS ============ -->
+<div class="slide" data-label="Appendix · Partnerships">
+<div class="slide-inner">
+  <div class="appendix-label">Appendix</div>
+  <div class="label">A3 — Partnership Model</div>
+  <div class="big">How co-founder deals <span class="gold">work.</span></div>
+  <div class="split-cols" style="margin-top:28px">
+    <div class="col">
+      <div class="col-header gold-h">They Bring</div>
+      <div class="col-item gold-item">Trust + credibility in category</div>
+      <div class="col-item gold-item">Audience (millions of followers)</div>
+      <div class="col-item gold-item">IRL presence — events, clinics, workshops</div>
+      <div class="col-item gold-item">10–20% equity stake + creative role</div>
+    </div>
+    <div class="col">
+      <div class="col-header gold-h">We Bring</div>
+      <div class="col-item gold-item">100% infrastructure + capital</div>
+      <div class="col-item gold-item">AI operations stack</div>
+      <div class="col-item gold-item">Manufacturing + supply chain</div>
+      <div class="col-item gold-item">Distribution (retail + DTC + marketplace)</div>
+    </div>
+  </div>
+  <div class="editorial-accent">Digital scales reach. Physical scales trust.<br>Both together = unassailable.</div>
+</div>
+</div>
+
+<!-- ============ SLIDE 19: AI OS ============ -->
+<div class="slide" data-label="Appendix · AI OS">
+<div class="slide-inner">
+  <div class="appendix-label">Appendix</div>
+  <div class="label">A4 — The AI OS</div>
+  <div class="big">What the <span class="gold">machine</span> does.</div>
+  <div class="stat-row" style="margin-top:28px">
+    <div class="stat-box" style="text-align:center"><div class="stat-num">$50K</div><div class="stat-label">AI Infra / Year</div></div>
+    <div class="stat-box" style="text-align:center"><div class="stat-num">vs $2M+</div><div class="stat-label">Equivalent Human Team</div></div>
+    <div class="stat-box" style="text-align:center"><div class="stat-num">60–80%</div><div class="stat-label">Cost Reduction</div></div>
+    <div class="stat-box" style="text-align:center"><div class="stat-num">4–8 wks</div><div class="stat-label">Brand Launch Time</div></div>
+  </div>
+  <div class="moat-list" style="margin-top:24px">
+    <div class="moat-item">6AM daily AI briefing — revenue, spend, anomalies</div>
+    <div class="moat-item">Every 15 min — ad performance monitoring + auto-adjustment</div>
+    <div class="moat-item">Continuous — customer service audit, SERP tracking, competitor watch</div>
+    <div class="moat-item">Weekly — full P&L calculation, creative performance analysis</div>
+    <div class="moat-item">24/7 — the team member that never sleeps, costs $50K/yr</div>
+  </div>
+</div>
+</div>
+
+<!-- ============ SLIDE 20: MARKETS ============ -->
+<div class="slide" data-label="Appendix · Markets">
+<div class="slide-inner">
+  <div class="appendix-label">Appendix</div>
+  <div class="label">A5 — The White Space</div>
+  <div class="big">The <span class="gold">white space.</span></div>
+  <div class="split-cols" style="margin-top:28px">
+    <div class="col">
+      <div class="col-header dim-h">Legacy Brands</div>
+      <div class="col-item dim-item">50+ years old</div>
+      <div class="col-item dim-item">50x too expensive to run</div>
+      <div class="col-item dim-item">Boards move at geological speed</div>
+      <div class="col-item dim-item">No AI. No DTC. No community.</div>
+    </div>
+    <div class="col">
+      <div class="col-header dim-h">New Entrants</div>
+      <div class="col-item dim-item">Digital-only. No physical moats.</div>
+      <div class="col-item dim-item">VC-dependent. Burning cash.</div>
+      <div class="col-item dim-item">No manufacturing relationships.</div>
+      <div class="col-item dim-item">Replicable in 90 days.</div>
+    </div>
+  </div>
+  <div class="stat-row" style="margin-top:28px">
+    <div class="stat-box" style="text-align:center;border-color:rgba(201,184,122,0.2)">
+      <div class="stat-num" style="font-size:16px;letter-spacing:1px">Care & Bloom</div>
+      <div style="font-size:13px;color:var(--body-dim);margin-top:8px;line-height:1.5">AI-native ops + physical moats.<br>The only player in DTC 3.0.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div><!-- end .deck -->
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn" onclick="prev()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <div class="progress">
+    <div class="counter"><span id="current">01</span> / <span id="total">20</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="section-label" id="sectionLabel">Care & Bloom</div>
+  </div>
+  <button class="nav-btn" onclick="next()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+</nav>
+
+<script>
+const slides=document.querySelectorAll('.slide');
+const total=slides.length;
+let idx=0;
+document.getElementById('total')
+.textContent=String(total).padStart(2,'0');
+
+function go(n){
+  slides[idx].classList.remove('active');
+  // Reset animations
+  slides[idx].querySelectorAll('.slide-inner > *').forEach(el=>{el.style.animation='none';el.offsetHeight;el.style.animation=''});
+  idx=((n%total)+total)%total;
+  slides[idx].classList.add('active');
+  document.getElementById('current').textContent=String(idx+1).padStart(2,'0');
+  document.getElementById('progressFill').style.width=((idx+1)/total*100)+'%';
+  document.getElementById('sectionLabel').textContent=slides[idx].dataset.label||'';
+}
+function next(){go(idx+1)}
+function prev(){go(idx-1)}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' ')next();
+  if(e.key==='ArrowLeft')prev();
+  if(e.key==='ArrowDown')next();
+  if(e.key==='ArrowUp')prev();
+});
+
+let tx=0;
+document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
+document.addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>50){d<0?next():prev()}},{passive:true});
+</script>
+</body>
+</html>
